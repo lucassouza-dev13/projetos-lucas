@@ -120,7 +120,7 @@ a:hover {
     align-items: center;
 }
 
-/* 🔥 CORREÇÃO AQUI */
+/* CORREÇÃO AQUI */
 .modal.hidden {
     display: none;
 }
@@ -207,4 +207,25 @@ html {
 #modal-trailer {
     border-radius: 10px;
     margin-top: 10px;
+}
+
+.genres {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px;
+}
+
+.genres button {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 20px;
+    background: #222;
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.genres button:hover {
+    background: red;
 }
