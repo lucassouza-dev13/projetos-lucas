@@ -229,3 +229,17 @@ html {
 .genres button:hover {
     background: red;
 }
+
+.remove-fav {
+    width: 100%;
+    border: none;
+    background: #300;
+    color: white;
+    padding: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.remove-fav:hover {
+    background: red;
+}
