@@ -9,7 +9,7 @@
 <body>
 
   <header>
-    <div class="logo">LusTV</div>
+    <div class="logo">CINEFLIX</div>
     <nav id="nav">
       <button class="active" data-aba="filmes">🎬 Filmes</button>
       <button data-aba="series">📺 Séries</button>
@@ -27,6 +27,23 @@
 
   <h1 id="page-title">🎬 Filmes</h1>
   <div id="main-content"></div>
+
+  <!-- MODAL -->
+  <div id="modal-overlay">
+    <div id="modal">
+      <button id="modal-close">✕</button>
+      <div id="modal-trailer"></div>
+      <div id="modal-body">
+        <div id="modal-poster"></div>
+        <div id="modal-info">
+          <h2 id="modal-title"></h2>
+          <div id="modal-meta"></div>
+          <p id="modal-overview"></p>
+          <button id="modal-fav-btn">♡ Favoritar</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="filme.js"></script>
 </body>
