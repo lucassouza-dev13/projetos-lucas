@@ -12,3 +12,5 @@ Projeto de catálogo de filmes e séries usando API do TMDB.
 - CSS
 - JavaScript
 - TMDB API
+
+https://lucassouza-dev13.github.io/projetos-lucas/
