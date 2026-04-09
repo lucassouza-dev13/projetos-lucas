@@ -16,7 +16,7 @@ const TITULOS = {
   filmes:        "🎬 Filmes",
   series:        "📺 Séries",
   documentarios: "🎥 Documentários",
-  animes:        "🎌 Animes",
+  animes:        "👾 Animações",
   favoritos:     "❤️ Favoritos"
 };
 
@@ -312,8 +312,8 @@ async function mudarAba(aba) {
       fetchData(`${BASE}/discover/tv?api_key=${API_KEY}&with_genres=16&language=pt-BR`)
     ]);
     content.innerHTML = "";
-    const secM = renderSecao("Filmes de Anime", movies, "movie");
-    const secS = renderSecao("Séries de Anime", series, "tv");
+    const secM = renderSecao("Filmes Animados", movies, "movie");
+    const secS = renderSecao("Séries Animadas", series, "tv");
     if (secM) content.appendChild(secM);
     if (secS) content.appendChild(secS);
     if (!secM && !secS) showEmpty("Nenhum anime encontrado.");
