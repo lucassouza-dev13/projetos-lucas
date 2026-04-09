@@ -8,9 +8,9 @@ let favorites = [];
 
 try { favorites = JSON.parse(localStorage.getItem("cineflix_favs")) || []; } catch(e) {}
 
-const content     = document.getElementById("main-content");
-const pageTitle   = document.getElementById("page-title");
-const searchInput = document.getElementById("search");
+const content      = document.getElementById("main-content");
+const pageTitle    = document.getElementById("page-title");
+const searchInput  = document.getElementById("search");
 
 const TITULOS = {
   filmes:        "🎬 Filmes",
@@ -34,7 +34,7 @@ async function fetchData(url) {
 
 async function fetchOne(url) {
   try {
-    const res  = await fetch(url);
+    const res = await fetch(url);
     return await res.json();
   } catch(e) {
     console.error("Erro:", e);
@@ -61,14 +61,14 @@ function toggleFav(item, tipo) {
 }
 
 // ================= MODAL =================
-const modalOverlay = document.getElementById("modal-overlay");
-const modalClose   = document.getElementById("modal-close");
-const modalTrailer = document.getElementById("modal-trailer");
-const modalPoster  = document.getElementById("modal-poster");
-const modalTitle   = document.getElementById("modal-title");
-const modalMeta    = document.getElementById("modal-meta");
+const modalOverlay  = document.getElementById("modal-overlay");
+const modalClose    = document.getElementById("modal-close");
+const modalTrailer  = document.getElementById("modal-trailer");
+const modalPoster   = document.getElementById("modal-poster");
+const modalTitle    = document.getElementById("modal-title");
+const modalMeta     = document.getElementById("modal-meta");
 const modalOverview = document.getElementById("modal-overview");
-const modalFavBtn  = document.getElementById("modal-fav-btn");
+const modalFavBtn   = document.getElementById("modal-fav-btn");
 
 let modalItem = null;
 let modalTipo = null;
@@ -78,55 +78,81 @@ async function abrirModal(item, tipo) {
   modalTipo = tipo;
 
   const titulo = tipo === "movie" ? item.title : item.name;
-  const ano    = (item.release_date || item.first_air_date || "").slice(0, 4);
 
-  // Título e descrição imediatos
-  modalTitle.textContent   = titulo;
-  modalOverview.textContent = item.overview || "Sem descrição disponível.";
-  modalTrailer.innerHTML   = `<div class="modal-no-trailer"><span>🎬</span>Carregando trailer...</div>`;
-
-  // Poster
-  modalPoster.innerHTML = item.poster_path
+  // Estado inicial enquanto carrega
+  modalTitle.textContent    = titulo;
+  modalOverview.textContent = "Carregando descrição...";
+  modalTrailer.innerHTML    = `<div class="modal-no-trailer"><span>🎬</span>Carregando trailer...</div>`;
+  modalPoster.innerHTML     = item.poster_path
     ? `<img src="${IMG_LG}${item.poster_path}" alt="${titulo}">`
     : `<div style="height:165px;display:flex;align-items:center;justify-content:center;color:#444;font-size:2rem;">🎬</div>`;
 
-  // Meta badges
-  const nota = item.vote_average ? item.vote_average.toFixed(1) : null;
-  modalMeta.innerHTML = `
-    ${nota ? `<span class="modal-badge rating">★ ${nota}</span>` : ""}
-    ${ano   ? `<span class="modal-badge">${ano}</span>` : ""}
-    <span class="modal-badge">${tipo === "movie" ? "Filme" : "Série"}</span>
-  `;
-
-  // Botão de favorito
+  modalMeta.innerHTML = "";
   modalFavBtn.textContent = isFav(item.id) ? "❤️ Favoritado" : "♡ Favoritar";
-  modalFavBtn.className   = "active" === "" ? "" : (isFav(item.id) ? "active" : "");
-
+  modalFavBtn.classList.toggle("active", isFav(item.id));
   modalOverlay.classList.add("open");
   document.body.style.overflow = "hidden";
 
-  // Busca o trailer
-  const endpoint = tipo === "movie"
+  // Busca detalhes em pt-BR e vídeos em paralelo
+  const detailsUrl = tipo === "movie"
+    ? `${BASE}/movie/${item.id}?api_key=${API_KEY}&language=pt-BR`
+    : `${BASE}/tv/${item.id}?api_key=${API_KEY}&language=pt-BR`;
+
+  const videosUrlPT = tipo === "movie"
     ? `${BASE}/movie/${item.id}/videos?api_key=${API_KEY}&language=pt-BR`
     : `${BASE}/tv/${item.id}/videos?api_key=${API_KEY}&language=pt-BR`;
 
-  let data = await fetchOne(endpoint);
-  let trailer = (data?.results || []).find(v => v.site === "YouTube" && (v.type === "Trailer" || v.type === "Teaser"));
+  const videosUrlEN = tipo === "movie"
+    ? `${BASE}/movie/${item.id}/videos?api_key=${API_KEY}&language=en-US`
+    : `${BASE}/tv/${item.id}/videos?api_key=${API_KEY}&language=en-US`;
 
-  // Fallback em inglês se não achar em pt-BR
+  const [details, videosPT, videosEN] = await Promise.all([
+    fetchOne(detailsUrl),
+    fetchOne(videosUrlPT),
+    fetchOne(videosUrlEN)
+  ]);
+
+  // ---- Descrição em português ----
+  const overview = details?.overview?.trim();
+  modalOverview.textContent = overview || "Descrição não disponível em português.";
+
+  // ---- Meta badges ----
+  const ano  = (details?.release_date || details?.first_air_date || item.release_date || item.first_air_date || "").slice(0, 4);
+  const nota = details?.vote_average ? details.vote_average.toFixed(1) : null;
+  const duracao = details?.runtime
+    ? `${details.runtime} min`
+    : details?.episode_run_time?.[0]
+      ? `${details.episode_run_time[0]} min/ep`
+      : null;
+
+  modalMeta.innerHTML = `
+    ${nota    ? `<span class="modal-badge rating">★ ${nota}</span>` : ""}
+    ${ano     ? `<span class="modal-badge">${ano}</span>` : ""}
+    ${duracao ? `<span class="modal-badge">${duracao}</span>` : ""}
+    <span class="modal-badge">${tipo === "movie" ? "Filme" : "Série"}</span>
+  `;
+
+  // ---- Trailer: tenta pt-BR, fallback en-US ----
+  const tipos = ["Trailer", "Teaser", "Clip", "Featurette"];
+
+  let trailer = null;
+  for (const t of tipos) {
+    trailer = (videosPT?.results || []).find(v => v.site === "YouTube" && v.type === t);
+    if (trailer) break;
+  }
   if (!trailer) {
-    const endpointEN = tipo === "movie"
-      ? `${BASE}/movie/${item.id}/videos?api_key=${API_KEY}&language=en-US`
-      : `${BASE}/tv/${item.id}/videos?api_key=${API_KEY}&language=en-US`;
-    const dataEN = await fetchOne(endpointEN);
-    trailer = (dataEN?.results || []).find(v => v.site === "YouTube" && (v.type === "Trailer" || v.type === "Teaser"));
+    for (const t of tipos) {
+      trailer = (videosEN?.results || []).find(v => v.site === "YouTube" && v.type === t);
+      if (trailer) break;
+    }
   }
 
   if (trailer) {
+    // Sem autoplay para evitar bloqueio do navegador — usuário clica para reproduzir
     modalTrailer.innerHTML = `
       <iframe
-        src="https://www.youtube.com/embed/${trailer.key}?autoplay=1&mute=1"
-        allow="autoplay; encrypted-media"
+        src="https://www.youtube.com/embed/${trailer.key}?rel=0&modestbranding=1"
+        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowfullscreen>
       </iframe>`;
   } else {
@@ -142,6 +168,8 @@ function fecharModal() {
   modalOverlay.classList.remove("open");
   document.body.style.overflow = "";
   modalTrailer.innerHTML = ""; // para o vídeo
+  modalItem = null;
+  modalTipo = null;
 }
 
 modalClose.addEventListener("click", fecharModal);
@@ -159,27 +187,24 @@ modalFavBtn.addEventListener("click", () => {
   modalFavBtn.textContent = fav ? "❤️ Favoritado" : "♡ Favoritar";
   modalFavBtn.classList.toggle("active", fav);
 
-  // Atualiza o botão no card correspondente
-  document.querySelectorAll(".movie-card").forEach(card => {
-    const btn = card.querySelector(".fav-btn");
-    if (btn && card.dataset.id == modalItem.id) {
-      btn.classList.toggle("active", fav);
-    }
+  // Atualiza botão no card correspondente
+  document.querySelectorAll(`.movie-card[data-id="${modalItem.id}"] .fav-btn`).forEach(btn => {
+    btn.classList.toggle("active", fav);
   });
 });
 
 // ================= CARD =================
 function criarCard(item, tipo) {
-  const titulo = tipo === "movie" ? item.title : item.name;
-  const card   = document.createElement("div");
-  card.className    = "movie-card";
-  card.dataset.id   = item.id;
+  const titulo   = tipo === "movie" ? item.title : item.name;
+  const card     = document.createElement("div");
+  card.className = "movie-card";
+  card.dataset.id = item.id;
 
   if (item.poster_path) {
-    const img   = document.createElement("img");
-    img.src     = IMG + item.poster_path;
-    img.alt     = titulo;
-    img.loading = "lazy";
+    const img    = document.createElement("img");
+    img.src      = IMG + item.poster_path;
+    img.alt      = titulo;
+    img.loading  = "lazy";
     card.appendChild(img);
   } else {
     const ph       = document.createElement("div");
@@ -205,8 +230,6 @@ function criarCard(item, tipo) {
   });
 
   card.appendChild(btn);
-
-  // Abre modal ao clicar no card
   card.addEventListener("click", () => abrirModal(item, tipo));
 
   return card;
@@ -345,21 +368,21 @@ searchInput.addEventListener("input", () => {
     const q = encodeURIComponent(query);
 
     if (abaAtual === "filmes" || abaAtual === "documentarios") {
-      const data = await fetchData(`${BASE}/search/movie?api_key=${API_KEY}&query=${q}`);
+      const data = await fetchData(`${BASE}/search/movie?api_key=${API_KEY}&query=${q}&language=pt-BR`);
       content.innerHTML = "";
       const sec = renderSecao(null, data, "movie");
       if (sec) content.appendChild(sec); else showEmpty();
 
     } else if (abaAtual === "series") {
-      const data = await fetchData(`${BASE}/search/tv?api_key=${API_KEY}&query=${q}`);
+      const data = await fetchData(`${BASE}/search/tv?api_key=${API_KEY}&query=${q}&language=pt-BR`);
       content.innerHTML = "";
       const sec = renderSecao(null, data, "tv");
       if (sec) content.appendChild(sec); else showEmpty();
 
     } else if (abaAtual === "animes") {
       const [movies, series] = await Promise.all([
-        fetchData(`${BASE}/search/movie?api_key=${API_KEY}&query=${q}`),
-        fetchData(`${BASE}/search/tv?api_key=${API_KEY}&query=${q}`)
+        fetchData(`${BASE}/search/movie?api_key=${API_KEY}&query=${q}&language=pt-BR`),
+        fetchData(`${BASE}/search/tv?api_key=${API_KEY}&query=${q}&language=pt-BR`)
       ]);
       content.innerHTML = "";
       const secM = renderSecao("Filmes", movies, "movie");
