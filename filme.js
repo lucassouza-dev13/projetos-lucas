@@ -101,7 +101,7 @@ function showMovies(movies) {
             saveFavorites();
         });
 
-        // 🔥 MODAL NOVO
+        //  MODAL NOVO
         movieEl.addEventListener("click", () => {
             itemAtual = { ...movie, media_type: "movie" };
 
@@ -180,7 +180,7 @@ function mostrarSeries(series) {
         
         });
 
-        // 🔥 MODAL NOVO
+        //  MODAL NOVO
         serieEl.addEventListener("click", () => {
             itemAtual = { ...serie, media_type: "tv" };
 
@@ -369,7 +369,7 @@ async function buscarTrailer(id, tipo) {
         const res = await fetch(url);
         const data = await res.json();
 
-        // 🔥 tenta achar trailer OU teaser
+        
         let video = data.results.find(
             vid => vid.type === "Trailer" && vid.site === "YouTube"
         );
