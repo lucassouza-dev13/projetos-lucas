@@ -286,21 +286,21 @@ async function mudarAba(aba) {
   showLoading();
 
   if (abaAtual === "filmes") {
-    const data = await fetchData(`${BASE}/discover/movie?api_key=${API_KEY}&sort_by=popularity.desc`);
+    const data = await fetchData(`${BASE}/discover/movie?api_key=${API_KEY}&sort_by=popularity.desc&language=pt-BR`);
     content.innerHTML = "";
     const sec = renderSecao(null, data, "movie");
     if (sec) content.appendChild(sec);
     else showEmpty("Nenhum filme encontrado.");
 
   } else if (abaAtual === "series") {
-    const data = await fetchData(`${BASE}/tv/popular?api_key=${API_KEY}`);
+    const data = await fetchData(`${BASE}/tv/popular?api_key=${API_KEY}&language=pt-BR`);
     content.innerHTML = "";
     const sec = renderSecao(null, data, "tv");
     if (sec) content.appendChild(sec);
     else showEmpty("Nenhuma série encontrada.");
 
   } else if (abaAtual === "documentarios") {
-    const data = await fetchData(`${BASE}/discover/movie?api_key=${API_KEY}&with_genres=99`);
+    const data = await fetchData(`${BASE}/discover/movie?api_key=${API_KEY}&with_genres=99&language=pt-BR`);
     content.innerHTML = "";
     const sec = renderSecao(null, data, "movie");
     if (sec) content.appendChild(sec);
@@ -308,8 +308,8 @@ async function mudarAba(aba) {
 
   } else if (abaAtual === "animes") {
     const [movies, series] = await Promise.all([
-      fetchData(`${BASE}/discover/movie?api_key=${API_KEY}&with_genres=16`),
-      fetchData(`${BASE}/discover/tv?api_key=${API_KEY}&with_genres=16`)
+      fetchData(`${BASE}/discover/movie?api_key=${API_KEY}&with_genres=16&language=pt-BR`),
+      fetchData(`${BASE}/discover/tv?api_key=${API_KEY}&with_genres=16&language=pt-BR`)
     ]);
     content.innerHTML = "";
     const secM = renderSecao("Filmes de Anime", movies, "movie");
