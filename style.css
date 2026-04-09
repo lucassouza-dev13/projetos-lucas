@@ -243,3 +243,8 @@ html {
 .remove-fav:hover {
     background: red;
 }
+
+.logo {
+    width: 180px;
+    object-fit: contain;
+}
