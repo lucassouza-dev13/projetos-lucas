@@ -52,15 +52,16 @@ async function carregarSeries() {
 
 // ================= DOCUMENTÁRIOS =================
 async function carregarDocumentarios() {
-    const url = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=99&language=pt-BR`;
+    const url = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=99`;
+    
     const data = await fetchData(url);
     showMovies(data);
 }
 
 // ================= ANIMES =================
 async function carregarAnimes() {
-    const urlMovies = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=16&with_original_language=ja`;
-    const urlSeries = `https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&with_genres=16&with_original_language=ja`;
+    const urlMovies = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=16`;
+    const urlSeries = `https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&with_genres=16`;
 
     const [movies, series] = await Promise.all([
         fetchData(urlMovies),
