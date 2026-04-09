@@ -8,22 +8,18 @@
 <body>
 
 <header>
-    <a href="#" onclick="mostrarFilmes()" id="btn-filmes">🎬 Filmes</a>
-    <a href="#" onclick="mostrarApenasSeries()" id="btn-series">📺 Séries</a>
-    <a href="index.html">
-        <img src="logo.png" alt="LusTV" class="logo">
+    <img src="logo.png" class="logo">
 
-        <div class="genres">
-              <button onclick="filtrarDocumentarios()">Documentários</button>
-              <button onclick="filtrarAnimes()">Animes</button>
-        </div>
-
-    </a>
+    <nav>
+        <a onclick="mudarAba('filmes')">🎬 Filmes</a>
+        <a onclick="mudarAba('series')">📺 Séries</a>
+        <a onclick="mudarAba('documentarios')">🎥 Documentários</a>
+        <a onclick="mudarAba('animes')">🎌 Animes</a>
+        <a id="show-favorites">❤️ Favoritos</a>
+    </nav>
 
     <div class="controls">
-        <input type="text" id="search" placeholder="Buscar filmes/séries">
-        <button id="show-favorites">❤️ Favoritos</button>
-        <button id="show-all">🎬 Todos</button>
+        <input type="text" id="search" placeholder="Buscar...">
     </div>
 </header>
 
