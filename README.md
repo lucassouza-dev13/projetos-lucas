@@ -1,1 +1,14 @@
-# projetos-lucas
+Projeto de catálogo de filmes e séries usando API do TMDB.
+
+- Funcionalidades:
+- Busca de filmes e séries
+- Favoritos
+- Modal com detalhes
+- Trailer integrado
+- Avaliações
+
+  Tecnologias:
+- HTML
+- CSS
+- JavaScript
+- TMDB API
