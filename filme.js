@@ -421,3 +421,36 @@ modal.addEventListener("click", (e) => {
     }
 });
 
+// 🎥 DOCUMENTÁRIOS
+function filtrarDocumentarios() {
+    abaAtual = "filmes";
+
+    const url = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=99&language=pt-BR`;
+
+    moviesEl.innerHTML = "";
+    seriesEl.innerHTML = "";
+
+    getMovies(url);
+}
+
+// 🎌 ANIMES (filmes + séries japonesas)
+async function filtrarAnimes() {
+    abaAtual = "todos";
+
+    moviesEl.innerHTML = "";
+    seriesEl.innerHTML = "";
+
+    const urlMovies = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=16&with_original_language=ja`;
+    const urlSeries = `https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&with_genres=16&with_original_language=ja`;
+
+    const [resMovies, resSeries] = await Promise.all([
+        fetch(urlMovies),
+        fetch(urlSeries)
+    ]);
+
+    const dataMovies = await resMovies.json();
+    const dataSeries = await resSeries.json();
+
+    showMovies(dataMovies.results);
+    mostrarSeries(dataSeries.results);
+}
