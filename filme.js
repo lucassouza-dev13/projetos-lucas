@@ -1,5 +1,6 @@
 const API_KEY = "8bcf3516840c71be090ce067d3464a1d";
 const IMG     = "https://image.tmdb.org/t/p/w342";
+const IMG_LG  = "https://image.tmdb.org/t/p/w500";
 const BASE    = "https://api.themoviedb.org/3";
 
 let abaAtual  = "filmes";
@@ -24,11 +25,20 @@ async function fetchData(url) {
   try {
     const res  = await fetch(url);
     const data = await res.json();
-    console.log("Resposta da API:", url, data);
     return data.results || [];
   } catch(e) {
     console.error("Erro ao buscar dados:", e);
     return [];
+  }
+}
+
+async function fetchOne(url) {
+  try {
+    const res  = await fetch(url);
+    return await res.json();
+  } catch(e) {
+    console.error("Erro:", e);
+    return null;
   }
 }
 
@@ -50,11 +60,120 @@ function toggleFav(item, tipo) {
   saveFavs();
 }
 
+// ================= MODAL =================
+const modalOverlay = document.getElementById("modal-overlay");
+const modalClose   = document.getElementById("modal-close");
+const modalTrailer = document.getElementById("modal-trailer");
+const modalPoster  = document.getElementById("modal-poster");
+const modalTitle   = document.getElementById("modal-title");
+const modalMeta    = document.getElementById("modal-meta");
+const modalOverview = document.getElementById("modal-overview");
+const modalFavBtn  = document.getElementById("modal-fav-btn");
+
+let modalItem = null;
+let modalTipo = null;
+
+async function abrirModal(item, tipo) {
+  modalItem = item;
+  modalTipo = tipo;
+
+  const titulo = tipo === "movie" ? item.title : item.name;
+  const ano    = (item.release_date || item.first_air_date || "").slice(0, 4);
+
+  // Título e descrição imediatos
+  modalTitle.textContent   = titulo;
+  modalOverview.textContent = item.overview || "Sem descrição disponível.";
+  modalTrailer.innerHTML   = `<div class="modal-no-trailer"><span>🎬</span>Carregando trailer...</div>`;
+
+  // Poster
+  modalPoster.innerHTML = item.poster_path
+    ? `<img src="${IMG_LG}${item.poster_path}" alt="${titulo}">`
+    : `<div style="height:165px;display:flex;align-items:center;justify-content:center;color:#444;font-size:2rem;">🎬</div>`;
+
+  // Meta badges
+  const nota = item.vote_average ? item.vote_average.toFixed(1) : null;
+  modalMeta.innerHTML = `
+    ${nota ? `<span class="modal-badge rating">★ ${nota}</span>` : ""}
+    ${ano   ? `<span class="modal-badge">${ano}</span>` : ""}
+    <span class="modal-badge">${tipo === "movie" ? "Filme" : "Série"}</span>
+  `;
+
+  // Botão de favorito
+  modalFavBtn.textContent = isFav(item.id) ? "❤️ Favoritado" : "♡ Favoritar";
+  modalFavBtn.className   = "active" === "" ? "" : (isFav(item.id) ? "active" : "");
+
+  modalOverlay.classList.add("open");
+  document.body.style.overflow = "hidden";
+
+  // Busca o trailer
+  const endpoint = tipo === "movie"
+    ? `${BASE}/movie/${item.id}/videos?api_key=${API_KEY}&language=pt-BR`
+    : `${BASE}/tv/${item.id}/videos?api_key=${API_KEY}&language=pt-BR`;
+
+  let data = await fetchOne(endpoint);
+  let trailer = (data?.results || []).find(v => v.site === "YouTube" && (v.type === "Trailer" || v.type === "Teaser"));
+
+  // Fallback em inglês se não achar em pt-BR
+  if (!trailer) {
+    const endpointEN = tipo === "movie"
+      ? `${BASE}/movie/${item.id}/videos?api_key=${API_KEY}&language=en-US`
+      : `${BASE}/tv/${item.id}/videos?api_key=${API_KEY}&language=en-US`;
+    const dataEN = await fetchOne(endpointEN);
+    trailer = (dataEN?.results || []).find(v => v.site === "YouTube" && (v.type === "Trailer" || v.type === "Teaser"));
+  }
+
+  if (trailer) {
+    modalTrailer.innerHTML = `
+      <iframe
+        src="https://www.youtube.com/embed/${trailer.key}?autoplay=1&mute=1"
+        allow="autoplay; encrypted-media"
+        allowfullscreen>
+      </iframe>`;
+  } else {
+    modalTrailer.innerHTML = `
+      <div class="modal-no-trailer">
+        <span>🎬</span>
+        Trailer não disponível
+      </div>`;
+  }
+}
+
+function fecharModal() {
+  modalOverlay.classList.remove("open");
+  document.body.style.overflow = "";
+  modalTrailer.innerHTML = ""; // para o vídeo
+}
+
+modalClose.addEventListener("click", fecharModal);
+modalOverlay.addEventListener("click", (e) => {
+  if (e.target === modalOverlay) fecharModal();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") fecharModal();
+});
+
+modalFavBtn.addEventListener("click", () => {
+  if (!modalItem) return;
+  toggleFav(modalItem, modalTipo);
+  const fav = isFav(modalItem.id);
+  modalFavBtn.textContent = fav ? "❤️ Favoritado" : "♡ Favoritar";
+  modalFavBtn.classList.toggle("active", fav);
+
+  // Atualiza o botão no card correspondente
+  document.querySelectorAll(".movie-card").forEach(card => {
+    const btn = card.querySelector(".fav-btn");
+    if (btn && card.dataset.id == modalItem.id) {
+      btn.classList.toggle("active", fav);
+    }
+  });
+});
+
 // ================= CARD =================
 function criarCard(item, tipo) {
   const titulo = tipo === "movie" ? item.title : item.name;
   const card   = document.createElement("div");
-  card.className = "movie-card";
+  card.className    = "movie-card";
+  card.dataset.id   = item.id;
 
   if (item.poster_path) {
     const img   = document.createElement("img");
@@ -86,6 +205,10 @@ function criarCard(item, tipo) {
   });
 
   card.appendChild(btn);
+
+  // Abre modal ao clicar no card
+  card.addEventListener("click", () => abrirModal(item, tipo));
+
   return card;
 }
 
