@@ -1,68 +1,33 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>LusTV - Catálogo</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cineflix</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header>
-    <img src="logo.png" class="logo">
-
-    <nav>
-        <a onclick="mudarAba('filmes')">🎬 Filmes</a>
-        <a onclick="mudarAba('series')">📺 Séries</a>
-        <a onclick="mudarAba('documentarios')">🎥 Documentários</a>
-        <a onclick="mudarAba('animes')">🎌 Animes</a>
-        <a id="show-favorites">❤️ Favoritos</a>
+  <header>
+    <div class="logo">LusTV</div>
+    <nav id="nav">
+      <button class="active" data-aba="filmes">🎬 Filmes</button>
+      <button data-aba="series">📺 Séries</button>
+      <button data-aba="documentarios">🎥 Documentários</button>
+      <button data-aba="animes">🎌 Animes</button>
+      <button data-aba="favoritos">❤️ Favoritos</button>
     </nav>
-
-    <div class="controls">
-        <input type="text" id="search" placeholder="Buscar...">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      <input type="text" id="search" placeholder="Buscar...">
     </div>
-</header>
+  </header>
 
-<!-- Seção Filmes -->
-<h2 id="filmes">🎬 Filmes</h2>
-<div id="movies-container" class="container"></div>
+  <h1 id="page-title">🎬 Filmes</h1>
+  <div id="main-content"></div>
 
-<!-- Seção Séries -->
-<h2 id="series">📺 Séries</h2>
-<div id="series-container" class="container"></div>
-
-<!-- Modal -->
-<div id="modal" class="modal hidden">
-  <div class="modal-content">
-
-    <span id="close">&times;</span>
-
-    <img id="modal-img">
-
-    <div class="modal-info">
-      <h2 id="modal-title"></h2>
-
-      <div class="modal-extra">
-        <span id="modal-rating"></span>
-        <span id="modal-date"></span>
-      </div>
-
-      <p id="modal-desc"></p>
-
-      <!-- 🔥 TRAILER -->
-      <iframe id="modal-trailer"
-        width="100%"
-        height="200"
-        frameborder="0"
-        allowfullscreen>
-      </iframe>
-
-      <button id="modal-fav">❤️ Favoritar</button>
-    </div>
-
-  </div>
-</div>
-
-<script src="filme.js" defer></script>
+  <script src="filme.js"></script>
 </body>
 </html>
