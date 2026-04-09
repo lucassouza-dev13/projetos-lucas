@@ -1,22 +1,6 @@
 let abaAtual = "filmes";
 
-function mudarAba(aba) {
-    abaAtual = aba;
-
-    if (aba === "filmes") {
-        mostrarFilmes();
-    } else if (aba === "series") {
-        mostrarApenasSeries();
-    }
-}
-
 const API_KEY = "8bcf3516840c71be090ce067d3464a1d";
-
-const modalTrailer = document.getElementById("modal-trailer");
-const API_URL = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&language=pt-BR`;
-const SEARCH_MOVIES = `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&language=pt-BR&query=`;
-const SEARCH_SERIES = `https://api.themoviedb.org/3/search/tv?api_key=${API_KEY}&language=pt-BR&query=`;
-const SERIES_URL = `https://api.themoviedb.org/3/tv/popular?api_key=${API_KEY}&language=pt-BR`;
 
 const IMG_PATH = "https://image.tmdb.org/t/p/w500";
 
@@ -28,326 +12,159 @@ const modal = document.getElementById("modal");
 const modalTitle = document.getElementById("modal-title");
 const modalDesc = document.getElementById("modal-desc");
 const modalImg = document.getElementById("modal-img");
-const modalRating = document.getElementById("modal-rating");
-const modalDate = document.getElementById("modal-date");
 const modalFavBtn = document.getElementById("modal-fav");
-const closeBtn = document.getElementById("close");
-
-const filmesTitle = document.getElementById("filmes");
-const seriesTitle = document.getElementById("series");
 
 let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
 let itemAtual = null;
 
-// ================= MODAL =================
-modal.addEventListener("click", (e) => {
-    if (e.target === modal) modal.classList.add("hidden");
-});
-closeBtn.addEventListener("click", () => modal.classList.add("hidden"));
+// ================= ABAS =================
+function mudarAba(aba) {
+    abaAtual = aba;
+    moviesEl.innerHTML = "";
+    seriesEl.innerHTML = "";
 
-// ================= FILMES =================
-async function getMovies(url) {
-    const res = await fetch(url);
-    const data = await res.json();
-    showMovies(data.results);
+    if (aba === "filmes") carregarFilmes();
+    if (aba === "series") carregarSeries();
+    if (aba === "documentarios") carregarDocumentarios();
+    if (aba === "animes") carregarAnimes();
 }
 
-function showMovies(movies) {
-    if (abaAtual !== "favoritos") {
-        moviesEl.innerHTML = "";
-    }
+// ================= FETCH =================
+async function fetchData(url) {
+    const res = await fetch(url);
+    const data = await res.json();
+    return data.results;
+}
 
-    if (!movies || movies.length === 0) {
-        moviesEl.innerHTML += "<h2>Nenhum filme encontrado 😢</h2>";
-        return;
-    }
-
-    movies.forEach(movie => {
-        const { id, title, poster_path, vote_average, overview } = movie;
-
-        const movieEl = document.createElement("div");
-        movieEl.classList.add("movie");
-
-        movieEl.innerHTML = `
-            <img src="${poster_path ? IMG_PATH + poster_path : ''}">
-            <div class="movie-info">
-                <h3>${title}</h3>
-                <span class="${getClassByRate(vote_average)}">⭐ ${vote_average}</span>
-            </div>
-            <button class="fav-btn">❤️</button>
-        `;
-
-        moviesEl.appendChild(movieEl);
-
-        const favBtn = movieEl.querySelector(".fav-btn");
-
-        if (favorites.find(f => f.id === id)) {
-            favBtn.style.background = "red";
-        }
-
-        favBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-
-            const isFav = favorites.find(f => f.id === id);
-
-            if (isFav) {
-                favorites = favorites.filter(f => f.id !== id);
-                favBtn.style.background = "#000";
-            } else {
-                favorites.push({ ...movie, media_type: "movie" });
-                favBtn.style.background = "red";
-            }
-
-            saveFavorites();
-        });
-
-        //  MODAL NOVO
-        movieEl.addEventListener("click", () => {
-            itemAtual = { ...movie, media_type: "movie" };
-
-            modal.classList.remove("hidden");
-            modalTitle.innerText = movie.title;
-            modalDesc.innerText = movie.overview || "Sem descrição disponível.";
-            modalImg.src = movie.poster_path ? IMG_PATH + movie.poster_path : "";
-
-            modalRating.innerText = "⭐ " + movie.vote_average;
-            modalDate.innerText = movie.release_date || "Data desconhecida";
-
-            atualizarBotaoFavorito(movie.id);
-
-            buscarTrailer(movie.id, "movie");
-        });
-    });
+// ================= FILMES =================
+async function carregarFilmes() {
+    const url = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&language=pt-BR`;
+    const data = await fetchData(url);
+    showMovies(data);
 }
 
 // ================= SÉRIES =================
-async function buscarSeries() {
-    const res = await fetch(SERIES_URL);
-    const data = await res.json();
-    mostrarSeries(data.results);
+async function carregarSeries() {
+    const url = `https://api.themoviedb.org/3/tv/popular?api_key=${API_KEY}&language=pt-BR`;
+    const data = await fetchData(url);
+    mostrarSeries(data);
 }
 
-function mostrarSeries(series) {
-    if (abaAtual !== "favoritos") {
-        seriesEl.innerHTML = "";
-    }
+// ================= DOCUMENTÁRIOS =================
+async function carregarDocumentarios() {
+    const url = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=99&language=pt-BR`;
+    const data = await fetchData(url);
+    showMovies(data);
+}
 
-    if (!series || series.length === 0) {
-        seriesEl.innerHTML += "<h2>Nenhuma série encontrada 😢</h2>";
-        return;
-    }
+// ================= ANIMES =================
+async function carregarAnimes() {
+    const urlMovies = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=16&with_original_language=ja`;
+    const urlSeries = `https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&with_genres=16&with_original_language=ja`;
 
-    series.forEach(serie => {
-        const { id, name, poster_path, vote_average, overview } = serie;
+    const [movies, series] = await Promise.all([
+        fetchData(urlMovies),
+        fetchData(urlSeries)
+    ]);
 
-        const serieEl = document.createElement("div");
-        serieEl.classList.add("movie");
+    showMovies(movies);
+    mostrarSeries(series);
+}
 
-        serieEl.innerHTML = `
-            <img src="${poster_path ? IMG_PATH + poster_path : ''}">
+// ================= RENDER FILMES =================
+function showMovies(movies) {
+    moviesEl.innerHTML = "";
+
+    movies.forEach(movie => {
+        const card = document.createElement("div");
+        card.classList.add("movie");
+
+        card.innerHTML = `
+            <img src="${IMG_PATH + movie.poster_path}">
             <div class="movie-info">
-                <h3>${name}</h3>
-                <span class="${getClassByRate(vote_average)}">⭐ ${vote_average}</span>
+                <h3>${movie.title}</h3>
             </div>
             <button class="fav-btn">❤️</button>
         `;
 
-        seriesEl.appendChild(serieEl);
+        moviesEl.appendChild(card);
 
-        const favBtn = serieEl.querySelector(".fav-btn");
+        const favBtn = card.querySelector(".fav-btn");
 
-        if (favorites.find(f => f.id === id)) {
+        if (favorites.find(f => f.id === movie.id)) {
             favBtn.style.background = "red";
         }
 
         favBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-
-            const isFav = favorites.find(f => f.id === id);
-
-            if (isFav) {
-                favorites = favorites.filter(f => f.id !== id);
-                favBtn.style.background = "#000";
-            } else {
-                favorites.push({ ...serie, media_type: "tv" });
-                favBtn.style.background = "red";
-            }
-
-            saveFavorites();
-
-            buscarTrailer(serie.id, "tv");
-
-        
+            toggleFavorito(movie, "movie", favBtn);
         });
 
-        //  MODAL NOVO
-        serieEl.addEventListener("click", () => {
-            itemAtual = { ...serie, media_type: "tv" };
-
-            modal.classList.remove("hidden");
-            modalTitle.innerText = serie.name;
-            modalDesc.innerText = serie.overview || "Sem descrição disponível.";
-            modalImg.src = serie.poster_path ? IMG_PATH + serie.poster_path : "";
-
-            modalRating.innerText = "⭐ " + serie.vote_average;
-            modalDate.innerText = serie.first_air_date || "Data desconhecida";
-
-            atualizarBotaoFavorito(serie.id);
-
-            buscarTrailer(serie.id, "tv");
-
-        });
+        card.addEventListener("click", () => abrirModal(movie, "movie"));
     });
 }
 
-// ================= ABAS =================
-function mostrarFilmes() {
-    abaAtual = "filmes";
-
-    filmesTitle.style.display = "block";
-    seriesTitle.style.display = "none";
-
-    moviesEl.innerHTML = "";
+// ================= RENDER SÉRIES =================
+function mostrarSeries(series) {
     seriesEl.innerHTML = "";
 
-    getMovies(API_URL);
-}
+    series.forEach(serie => {
+        const card = document.createElement("div");
+        card.classList.add("movie");
 
-function mostrarApenasSeries() {
-    abaAtual = "series";
+        card.innerHTML = `
+            <img src="${IMG_PATH + serie.poster_path}">
+            <div class="movie-info">
+                <h3>${serie.name}</h3>
+            </div>
+            <button class="fav-btn">❤️</button>
+        `;
 
-    filmesTitle.style.display = "none";
-    seriesTitle.style.display = "block";
+        seriesEl.appendChild(card);
 
-    moviesEl.innerHTML = "";
-    seriesEl.innerHTML = "";
+        const favBtn = card.querySelector(".fav-btn");
 
-    buscarSeries();
+        if (favorites.find(f => f.id === serie.id)) {
+            favBtn.style.background = "red";
+        }
+
+        favBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            toggleFavorito(serie, "tv", favBtn);
+        });
+
+        card.addEventListener("click", () => abrirModal(serie, "tv"));
+    });
 }
 
 // ================= FAVORITOS =================
-document.getElementById("show-favorites").addEventListener("click", () => {
-    abaAtual = "favoritos";
+function toggleFavorito(item, tipo, btn) {
+    const isFav = favorites.find(f => f.id === item.id);
 
-    filmesTitle.style.display = "none";
-    seriesTitle.style.display = "none";
-
-    moviesEl.innerHTML = "";
-    seriesEl.innerHTML = "";
-
-    if (favorites.length === 0) {
-        moviesEl.innerHTML = "<h2>Sem Favoritos</h2>";
-        return;
+    if (isFav) {
+        favorites = favorites.filter(f => f.id !== item.id);
+        btn.style.background = "#000";
+    } else {
+        favorites.push({ ...item, media_type: tipo });
+        btn.style.background = "red";
     }
 
-    const favMovies = favorites.filter(f => f.media_type === "movie");
-    const favSeries = favorites.filter(f => f.media_type === "tv");
-
-    if (favMovies.length > 0) {
-        const tituloFilmes = document.createElement("h2");
-        tituloFilmes.innerText = "🎬 Filmes Favoritos";
-        moviesEl.appendChild(tituloFilmes);
-
-        favMovies.forEach(movie => {
-            const card = document.createElement("div");
-            card.classList.add("movie");
-
-            card.innerHTML = `
-    <img src="${movie.poster_path ? IMG_PATH + movie.poster_path : ''}">
-    <div class="movie-info">
-        <h3>${movie.title}</h3>
-        <span class="${getClassByRate(movie.vote_average)}">⭐ ${movie.vote_average}</span>
-    </div>
-    <button class="remove-fav">💔 Remover</button>
-`;
-            const removeBtn = card.querySelector(".remove-fav");
-
-removeBtn.addEventListener("click", () => {
-    favorites = favorites.filter(f => f.id !== movie.id);
     saveFavorites();
-    document.getElementById("show-favorites").click();
-});
-
-            moviesEl.appendChild(card);
-        });
-    }
-
-    if (favSeries.length > 0) {
-        const tituloSeries = document.createElement("h2");
-        tituloSeries.innerText = "📺 Séries Favoritas";
-        seriesEl.appendChild(tituloSeries);
-
-        favSeries.forEach(serie => {
-            const card = document.createElement("div");
-            card.classList.add("movie");
-
-            card.innerHTML = `
-    <img src="${serie.poster_path ? IMG_PATH + serie.poster_path : ''}">
-    <div class="movie-info">
-        <h3>${serie.name}</h3>
-        <span class="${getClassByRate(serie.vote_average)}">⭐ ${serie.vote_average}</span>
-    </div>
-    <button class="remove-fav">💔 Remover</button>
-`;
-            const removeBtn = card.querySelector(".remove-fav");
-
-removeBtn.addEventListener("click", () => {
-    favorites = favorites.filter(f => f.id !== serie.id);
-    saveFavorites();
-    document.getElementById("show-favorites").click();
-});
-
-            seriesEl.appendChild(card);
-        });
-    }
-});
-
-// ================= BUSCA =================
-search.addEventListener("input", async () => {
-    const query = search.value.trim();
-
-    if (!query) {
-        if (abaAtual === "filmes") return getMovies(API_URL);
-        if (abaAtual === "series") return buscarSeries();
-
-        getMovies(API_URL);
-        buscarSeries();
-        return;
-    }
-
-    if (abaAtual === "filmes") {
-        const res = await fetch(SEARCH_MOVIES + query);
-        const data = await res.json();
-        showMovies(data.results);
-    } 
-    else if (abaAtual === "series") {
-        const res = await fetch(SEARCH_SERIES + query);
-        const data = await res.json();
-        mostrarSeries(data.results);
-    } 
-    else {
-        const [resMovies, resSeries] = await Promise.all([
-            fetch(SEARCH_MOVIES + query),
-            fetch(SEARCH_SERIES + query)
-        ]);
-
-        const dataMovies = await resMovies.json();
-        const dataSeries = await resSeries.json();
-
-        showMovies(dataMovies.results);
-        mostrarSeries(dataSeries.results);
-    }
-});
-
-// ================= FAVORITO MODAL =================
-function atualizarBotaoFavorito(id) {
-    const isFav = favorites.find(f => f.id === id);
-
-    modalFavBtn.innerText = isFav
-        ? "💔 Remover dos Favoritos"
-        : "❤️ Favoritar";
 }
 
+// ================= MODAL =================
+function abrirModal(item, tipo) {
+    itemAtual = { ...item, media_type: tipo };
+
+    modal.classList.remove("hidden");
+    modalTitle.innerText = item.title || item.name;
+    modalDesc.innerText = item.overview || "Sem descrição";
+    modalImg.src = IMG_PATH + item.poster_path;
+
+    atualizarBotaoFavorito(item.id);
+}
+
+// botão dentro do modal
 modalFavBtn.addEventListener("click", () => {
     if (!itemAtual) return;
 
@@ -363,11 +180,12 @@ modalFavBtn.addEventListener("click", () => {
     atualizarBotaoFavorito(itemAtual.id);
 });
 
-// ================= UTIL =================
-function getClassByRate(vote) {
-    if (vote >= 8) return "green";
-    if (vote >= 5) return "orange";
-    return "red";
+function atualizarBotaoFavorito(id) {
+    const isFav = favorites.find(f => f.id === id);
+
+    modalFavBtn.innerText = isFav
+        ? "💔 Remover dos Favoritos"
+        : "❤️ Favoritar";
 }
 
 function saveFavorites() {
@@ -376,81 +194,5 @@ function saveFavorites() {
 
 // ================= INIT =================
 window.onload = () => {
-    mostrarFilmes();
+    carregarFilmes();
 };
-
-async function buscarTrailer(id, tipo) {
-    try {
-        const url = `https://api.themoviedb.org/3/${tipo}/${id}/videos?api_key=${API_KEY}&language=pt-BR`;
-        const res = await fetch(url);
-        const data = await res.json();
-
-        
-        let video = data.results.find(
-            vid => vid.type === "Trailer" && vid.site === "YouTube"
-        );
-
-        // se não tiver trailer, tenta teaser
-        if (!video) {
-            video = data.results.find(
-                vid => vid.site === "YouTube"
-            );
-        }
-
-        if (video) {
-            modalTrailer.src = `https://www.youtube.com/embed/${video.key}`;
-        } else {
-            modalTrailer.src = "";
-        }
-
-    } catch (error) {
-        console.error("Erro ao buscar trailer:", error);
-        modalTrailer.src = "";
-    }
-}
-
-closeBtn.addEventListener("click", () => {
-    modal.classList.add("hidden");
-    modalTrailer.src = "";
-});
-
-modal.addEventListener("click", (e) => {
-    if (e.target === modal) {
-        modal.classList.add("hidden");
-        modalTrailer.src = "";
-    }
-});
-
-// 🎥 DOCUMENTÁRIOS
-function filtrarDocumentarios() {
-    abaAtual = "filmes";
-
-    const url = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=99&language=pt-BR`;
-
-    moviesEl.innerHTML = "";
-    seriesEl.innerHTML = "";
-
-    getMovies(url);
-}
-
-// 🎌 ANIMES (filmes + séries japonesas)
-async function filtrarAnimes() {
-    abaAtual = "todos";
-
-    moviesEl.innerHTML = "";
-    seriesEl.innerHTML = "";
-
-    const urlMovies = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=16&with_original_language=ja`;
-    const urlSeries = `https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&with_genres=16&with_original_language=ja`;
-
-    const [resMovies, resSeries] = await Promise.all([
-        fetch(urlMovies),
-        fetch(urlSeries)
-    ]);
-
-    const dataMovies = await resMovies.json();
-    const dataSeries = await resSeries.json();
-
-    showMovies(dataMovies.results);
-    mostrarSeries(dataSeries.results);
-}
