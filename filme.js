@@ -404,3 +404,14 @@ modal.addEventListener("click", (e) => {
         modalTrailer.src = "";
     }
 });
+
+function filtrarGenero(generoId) {
+    abaAtual = "filmes";
+
+    const url = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=${generoId}&language=pt-BR`;
+
+    moviesEl.innerHTML = "";
+    seriesEl.innerHTML = "";
+
+    getMovies(url);
+}
