@@ -1,0 +1,210 @@
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #111;
+    color: #fff;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background: #000;
+}
+
+a {
+    color: white;
+    margin: 10px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+a:hover {
+    color: red;
+}
+
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.controls input {
+    padding: 10px 15px;
+    border-radius: 20px;
+    border: none;
+    outline: none;
+}
+
+.controls button {
+    padding: 10px 15px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    background: #222;
+    color: white;
+    transition: 0.3s;
+    font-weight: bold;
+}
+
+.controls button:hover {
+    background: red;
+    transform: scale(1.05);
+}
+
+.logo {
+    width: 230px;
+    filter: drop-shadow(0 0 5px red);
+}
+
+/* CONTAINERS */
+#movies-container,
+#series-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 20px;
+    gap: 15px;
+}
+
+/* CARD */
+.movie {
+    width: 200px;
+    background: #111;
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.movie img {
+    width: 100%;
+}
+
+.movie-info {
+    padding: 10px;
+}
+
+.movie:hover {
+    transform: scale(1.08);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+    z-index: 10;
+}
+
+/* FAVORITO */
+.fav-btn {
+    width: 100%;
+    border: none;
+    background: #000;
+    color: white;
+    padding: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.fav-btn:hover {
+    background: red;
+}
+
+/* MODAL */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 🔥 CORREÇÃO AQUI */
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: #111;
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    border-radius: 12px;
+    max-width: 800px;
+    width: 90%;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content img {
+    width: 300px;
+    border-radius: 10px;
+}
+
+.modal-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modal-extra {
+    display: flex;
+    gap: 15px;
+    font-size: 14px;
+    color: #ccc;
+}
+
+#modal-fav {
+    margin-top: 10px;
+    padding: 10px;
+    border: none;
+    background: red;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+/* BOTÃO FECHAR */
+#close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 25px;
+    cursor: pointer;
+}
+
+/* ANIMAÇÃO */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* GRID EXTRA (favoritos) */
+.movies-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+#movies-container h2,
+#series-container h2 {
+    width: 100%;
+    margin: 20px 0 10px;
+    padding-left: 10px;
+    border-left: 4px solid red;
+}
+
+#modal-trailer {
+    border-radius: 10px;
+    margin-top: 10px;
+}

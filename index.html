@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>LusTV - Catálogo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <a href="#" onclick="mostrarFilmes()" id="btn-filmes">🎬 Filmes</a>
+    <a href="#" onclick="mostrarApenasSeries()" id="btn-series">📺 Séries</a>
+    <a href="index.html">
+        <img src="img/logo.png" alt="LusTV" class="logo">
+    </a>
+
+    <div class="controls">
+        <input type="text" id="search" placeholder="Buscar filmes/séries">
+        <button id="show-favorites">❤️ Favoritos</button>
+        <button id="show-all">🎬 Todos</button>
+    </div>
+</header>
+
+<!-- Seção Filmes -->
+<h2 id="filmes">🎬 Filmes</h2>
+<div id="movies-container" class="container"></div>
+
+<!-- Seção Séries -->
+<h2 id="series">📺 Séries</h2>
+<div id="series-container" class="container"></div>
+
+<!-- Modal -->
+<div id="modal" class="modal hidden">
+  <div class="modal-content">
+
+    <span id="close">&times;</span>
+
+    <img id="modal-img">
+
+    <div class="modal-info">
+      <h2 id="modal-title"></h2>
+
+      <div class="modal-extra">
+        <span id="modal-rating"></span>
+        <span id="modal-date"></span>
+      </div>
+
+      <p id="modal-desc"></p>
+
+      <!-- 🔥 TRAILER -->
+      <iframe id="modal-trailer"
+        width="100%"
+        height="200"
+        frameborder="0"
+        allowfullscreen>
+      </iframe>
+
+      <button id="modal-fav">❤️ Favoritar</button>
+    </div>
+
+  </div>
+</div>
+
+<script src="filme.js" defer></script>
+</body>
+</html>
