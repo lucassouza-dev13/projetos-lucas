@@ -253,12 +253,20 @@ document.getElementById("show-favorites").addEventListener("click", () => {
             card.classList.add("movie");
 
             card.innerHTML = `
-                <img src="${movie.poster_path ? IMG_PATH + movie.poster_path : ''}">
-                <div class="movie-info">
-                    <h3>${movie.title}</h3>
-                    <span class="${getClassByRate(movie.vote_average)}">⭐ ${movie.vote_average}</span>
-                </div>
-            `;
+    <img src="${movie.poster_path ? IMG_PATH + movie.poster_path : ''}">
+    <div class="movie-info">
+        <h3>${movie.title}</h3>
+        <span class="${getClassByRate(movie.vote_average)}">⭐ ${movie.vote_average}</span>
+    </div>
+    <button class="remove-fav">💔 Remover</button>
+`;
+            const removeBtn = card.querySelector(".remove-fav");
+
+removeBtn.addEventListener("click", () => {
+    favorites = favorites.filter(f => f.id !== movie.id);
+    saveFavorites();
+    document.getElementById("show-favorites").click();
+});
 
             moviesEl.appendChild(card);
         });
@@ -274,12 +282,20 @@ document.getElementById("show-favorites").addEventListener("click", () => {
             card.classList.add("movie");
 
             card.innerHTML = `
-                <img src="${serie.poster_path ? IMG_PATH + serie.poster_path : ''}">
-                <div class="movie-info">
-                    <h3>${serie.name}</h3>
-                    <span class="${getClassByRate(serie.vote_average)}">⭐ ${serie.vote_average}</span>
-                </div>
-            `;
+    <img src="${serie.poster_path ? IMG_PATH + serie.poster_path : ''}">
+    <div class="movie-info">
+        <h3>${serie.name}</h3>
+        <span class="${getClassByRate(serie.vote_average)}">⭐ ${serie.vote_average}</span>
+    </div>
+    <button class="remove-fav">💔 Remover</button>
+`;
+            const removeBtn = card.querySelector(".remove-fav");
+
+removeBtn.addEventListener("click", () => {
+    favorites = favorites.filter(f => f.id !== serie.id);
+    saveFavorites();
+    document.getElementById("show-favorites").click();
+});
 
             seriesEl.appendChild(card);
         });
@@ -405,13 +421,3 @@ modal.addEventListener("click", (e) => {
     }
 });
 
-function filtrarGenero(generoId) {
-    abaAtual = "filmes";
-
-    const url = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=${generoId}&language=pt-BR`;
-
-    moviesEl.innerHTML = "";
-    seriesEl.innerHTML = "";
-
-    getMovies(url);
-}
