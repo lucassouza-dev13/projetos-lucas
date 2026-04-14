@@ -2,49 +2,108 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LusTV</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <header>
-    <div class="logo">Avaliador de Filmes - LusTV</div>
-    <nav id="nav">
-      <button class="active" data-aba="filmes">🎬 Filmes</button>
-      <button data-aba="series">📺 Séries</button>
-      <button data-aba="documentarios">🎥 Documentários</button>
-      <button data-aba="animes">👾 Animações</button>
-      <button data-aba="favoritos">❤️ Favoritos</button>
-    </nav>
-    <div class="search-wrap">
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
-      </svg>
-      <input type="text" id="search" placeholder="Buscar...">
-    </div>
-  </header>
+<header>
+  <div class="logo">LusTV</div>
 
-  <h1 id="page-title">🎬 Filmes</h1>
-  <div id="main-content"></div>
+  <nav>
+    <button class="active" data-aba="filmes">🎬 Filmes</button>
+    <button data-aba="series">📺 Séries</button>
+    <button data-aba="documentarios">🎥 Docs</button>
+    <button data-aba="animes">👾 Animações</button>
+    <button data-aba="favoritos">❤️ Favoritos</button>
+  </nav>
 
-  <!-- MODAL -->
-  <div id="modal-overlay">
-    <div id="modal">
-      <button id="modal-close">✕</button>
-      <div id="modal-trailer"></div>
-      <div id="modal-body">
-        <div id="modal-poster"></div>
-        <div id="modal-info">
-          <h2 id="modal-title"></h2>
-          <div id="modal-meta"></div>
-          <p id="modal-overview"></p>
-          <button id="modal-fav-btn">♡ Favoritar</button>
-        </div>
-      </div>
-    </div>
+  <div class="search-wrap">
+    <input type="text" id="search" placeholder="Buscar...">
   </div>
 
-  <script src="filme.js"></script>
+  <div id="login-box">
+    <!-- preenchido pelo JS -->
+  </div>
+</header>
+
+<h1 id="page-title">🎬 Filmes</h1>
+<div id="main-content"></div>
+
+<!-- ======= MODAL FILME ======= -->
+<div id="modal-overlay">
+  <div id="modal">
+    <button id="modal-close">✕</button>
+    <div id="modal-trailer"></div>
+
+    <div id="modal-body">
+      <div id="modal-poster"></div>
+
+      <div id="modal-info">
+        <h2 id="modal-title"></h2>
+        <div id="modal-meta"></div>
+        <p id="modal-overview"></p>
+        <button id="modal-fav-btn">♡ Favoritar</button>
+      </div>
+    </div>
+
+    <!-- AVALIAÇÕES DENTRO DO MODAL -->
+    <section id="avaliacoes">
+      <div class="av-form-card" id="av-form-wrap">
+        <h3>Avaliar</h3>
+
+        <div id="av-login-aviso" style="display:none">
+          <p>Faça <a href="#" id="av-link-login">login</a> para avaliar.</p>
+        </div>
+
+        <div id="av-form-fields">
+          <div class="av-estrelas" id="av-estrelas">
+            <button data-v="1">★</button>
+            <button data-v="2">★</button>
+            <button data-v="3">★</button>
+            <button data-v="4">★</button>
+            <button data-v="5">★</button>
+          </div>
+          <span id="av-hint">Selecione uma nota</span>
+          <textarea id="av-comentario" placeholder="Comentário (opcional)..."></textarea>
+          <button id="av-btn" disabled>Enviar avaliação</button>
+        </div>
+      </div>
+
+      <div class="av-lista-card">
+        <h3>Avaliações</h3>
+        <div id="av-resumo"></div>
+        <div id="av-lista"></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ======= MODAL LOGIN ======= -->
+<div id="login-modal-overlay">
+  <div id="login-modal">
+    <button id="login-modal-close">✕</button>
+    <div class="login-modal-header">
+      <div class="login-logo">LusTV</div>
+      <p>Entre para salvar favoritos e avaliar títulos</p>
+    </div>
+
+    <div class="login-modal-body">
+      <div class="login-field">
+        <label for="lm-nome">Nome de usuário</label>
+        <input type="text" id="lm-nome" placeholder="Como quer ser chamado?" maxlength="30" autocomplete="off">
+      </div>
+      <div class="login-field">
+        <label for="lm-senha">Senha</label>
+        <input type="password" id="lm-senha" placeholder="Crie uma senha" maxlength="40">
+      </div>
+      <div id="login-error" class="login-error"></div>
+      <button id="lm-entrar-btn">Entrar / Cadastrar</button>
+      <p class="login-hint">Novo usuário? Basta digitar um nome e senha — a conta é criada automaticamente.</p>
+    </div>
+  </div>
+</div>
+
+<script src="filme.js"></script>
 </body>
 </html>
