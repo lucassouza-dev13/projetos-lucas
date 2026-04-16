@@ -2,7 +2,7 @@ const API_KEY = "8bcf3516840c71be090ce067d3464a1d";
 const IMG     = "https://image.tmdb.org/t/p/w342";
 const IMG_LG  = "https://image.tmdb.org/t/p/w500";
 const BASE    = "https://api.themoviedb.org/3";
-
+const API = "https://backend-cat-logo.railway.internal";
 // ================= ESTADO GLOBAL =================
 let abaAtual  = "filmes";
 let favorites = [];
