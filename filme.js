@@ -2,8 +2,7 @@
 // CONFIGURAÇÃO
 // Depois que o Railway te der a URL do backend, troque aqui:
 // ─────────────────────────────────────────────────────────────────────────────
-const BACKEND = "https://SEU-PROJETO.up.railway.app"; // ← TROQUE DEPOIS DO DEPLOY
-
+const BACKEND = "https://backend-cat-logo-production.up.railway.app";
 const API_KEY = "8bcf3516840c71be090ce067d3464a1d";
 const IMG     = "https://image.tmdb.org/t/p/w342";
 const IMG_LG  = "https://image.tmdb.org/t/p/w500";
