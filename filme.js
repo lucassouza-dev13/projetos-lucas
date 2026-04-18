@@ -141,8 +141,9 @@ lmEntrarBtn.addEventListener("click", async () => {
     try {
       data = await api("POST", "/auth/entrar", { nome, senha });
     } catch (err) {
-      if (err.message === "Usuário não encontrado.") {
-        data = await api("POST", "/auth/cadastrar", { nome, senha });
+    if (err.message === "Usuario nao encontrado.") {
+  
+  data = await api("POST", "/auth/cadastrar", { nome, senha });
       } else {
         throw err;
       }
