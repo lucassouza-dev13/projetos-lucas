@@ -15,16 +15,6 @@ let favorites = [];
 let usuario   = null; // { id, nome }
 let token     = null;
 
-// ─── Estado de paginação ─────────────────────────────────────────────────────
-const PAG = {
-  paginaAtual:  1,
-  totalPaginas: 1,
-  carregando:   false,
-  urlAtual:     null,
-  tipoAtual:    null,
-  ativo:        false,
-};
-
 try { favorites = JSON.parse(localStorage.getItem("lustv_favs")) || []; } catch(e) {}
 try {
   token   = localStorage.getItem("lustv_token");
@@ -77,14 +67,6 @@ async function api(method, path, body = null) {
 // ══════════════════════════════════════════════════════════════════════════════
 async function fetchData(url) {
   try { const r = await fetch(url); const d = await r.json(); return d.results || []; } catch(e) { return []; }
-}
-async function fetchDataPaginado(url, pagina) {
-  try {
-    const sep = url.includes("?") ? "&" : "?";
-    const r   = await fetch(`${url}${sep}page=${pagina}`);
-    const d   = await r.json();
-    return { results: d.results || [], total_pages: d.total_pages || 1 };
-  } catch(e) { return { results: [], total_pages: 1 }; }
 }
 async function fetchOne(url) {
   try { const r = await fetch(url); return await r.json(); } catch(e) { return null; }
@@ -458,35 +440,48 @@ modalFavBtn.addEventListener("click", () => {
 // CARDS / RENDER / ABAS / BUSCA
 // ══════════════════════════════════════════════════════════════════════════════
 function criarCard(item, tipo) {
-  const titulo = tipo === "movie" ? item.title : item.name;
-  const card   = document.createElement("div");
+  const titulo  = tipo === "movie" ? item.title : item.name;
+  const dataRaw = item.release_date || item.first_air_date || "";
+  const dataFmt = dataRaw
+    ? new Date(dataRaw).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })
+    : "";
+
+  const card = document.createElement("div");
   card.className  = "movie-card";
   card.dataset.id = item.id;
+
+  // Poster wrapper (parte de cima)
+  const posterWrap = document.createElement("div");
+  posterWrap.className = "card-poster";
 
   if (item.poster_path) {
     const img = document.createElement("img");
     img.src = IMG + item.poster_path; img.alt = titulo; img.loading = "lazy";
-    card.appendChild(img);
+    posterWrap.appendChild(img);
   } else {
     const ph = document.createElement("div");
-    ph.className = "placeholder-img"; ph.textContent = "🎬";
-    card.appendChild(ph);
+    ph.className = "placeholder-img"; ph.textContent = "\uD83C\uDFAC";
+    posterWrap.appendChild(ph);
   }
-
-  const overlay = document.createElement("div");
-  overlay.className = "card-overlay";
-  overlay.innerHTML = `<div class="card-title">${titulo}</div>`;
-  card.appendChild(overlay);
 
   const btn = document.createElement("button");
   btn.className = "fav-btn" + (isFav(item.id) ? " active" : "");
-  btn.title = "Favoritar"; btn.textContent = "♥";
+  btn.title = "Favoritar"; btn.textContent = "\u2665";
   btn.addEventListener("click", e => {
     e.stopPropagation();
     toggleFav(item, tipo);
     btn.classList.toggle("active", isFav(item.id));
   });
-  card.appendChild(btn);
+  posterWrap.appendChild(btn);
+  card.appendChild(posterWrap);
+
+  // Info (parte de baixo)
+  const info = document.createElement("div");
+  info.className = "card-info";
+  info.innerHTML = "<div class=\"card-title\">" + titulo + "</div>" +
+    (dataFmt ? "<div class=\"card-date\">" + dataFmt + "</div>" : "");
+  card.appendChild(info);
+
   card.addEventListener("click", () => abrirModal(item, tipo));
   return card;
 }
@@ -501,51 +496,6 @@ function renderSecao(label, items, tipo) {
   return sec;
 }
 
-// Acrescenta cards no último .grid existente
-function appendCards(items, tipo) {
-  let grid = content.querySelector(".grid:last-of-type");
-  if (!grid) { grid = document.createElement("div"); grid.className = "grid"; content.appendChild(grid); }
-  const frag = document.createDocumentFragment();
-  items.forEach(item => frag.appendChild(criarCard(item, tipo)));
-  grid.appendChild(frag);
-}
-
-// ── Botão "Carregar mais" ─────────────────────────────────────────────────────
-const btnCarregarMais = document.getElementById("btn-carregar-mais");
-
-function atualizarBotao() {
-  if (!btnCarregarMais) return;
-  const visivel = PAG.ativo && PAG.paginaAtual <= PAG.totalPaginas;
-  btnCarregarMais.hidden = !visivel;
-  btnCarregarMais.disabled = PAG.carregando;
-  btnCarregarMais.textContent = PAG.carregando ? "Carregando..." : "Carregar mais";
-}
-
-async function carregarMaisPagina() {
-  if (!PAG.ativo || PAG.carregando || PAG.paginaAtual > PAG.totalPaginas) return;
-  PAG.carregando = true;
-  atualizarBotao();
-  try {
-    const { results, total_pages } = await fetchDataPaginado(PAG.urlAtual, PAG.paginaAtual);
-    PAG.totalPaginas = total_pages;
-    if (results.length) appendCards(results, PAG.tipoAtual);
-    PAG.paginaAtual++;
-  } catch(e) { console.error("Carregar mais:", e); }
-  finally { PAG.carregando = false; atualizarBotao(); }
-}
-
-if (btnCarregarMais) btnCarregarMais.addEventListener("click", carregarMaisPagina);
-
-function resetPag(urlBase, tipo, totalPaginas = 1, ativo = true) {
-  PAG.urlAtual     = urlBase;
-  PAG.tipoAtual    = tipo;
-  PAG.paginaAtual  = 2;
-  PAG.totalPaginas = totalPaginas;
-  PAG.carregando   = false;
-  PAG.ativo        = ativo;
-  atualizarBotao();
-}
-
 function showLoading() { content.innerHTML = `<div class="loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`; }
 function showEmpty(msg = "Nada encontrado 😢") { content.innerHTML = `<div class="empty-state"><span>🎬</span>${msg}</div>`; }
 
@@ -557,25 +507,19 @@ async function mudarAba(aba) {
   showLoading();
 
   if (aba === "filmes") {
-    const url = `${BASE}/discover/movie?api_key=${API_KEY}&sort_by=popularity.desc&language=pt-BR`;
-    const { results, total_pages } = await fetchDataPaginado(url, 1);
-    content.innerHTML = ""; const sec = renderSecao(null, results, "movie");
+    const data = await fetchData(`${BASE}/discover/movie?api_key=${API_KEY}&sort_by=popularity.desc&language=pt-BR`);
+    content.innerHTML = ""; const sec = renderSecao(null, data, "movie");
     sec ? content.appendChild(sec) : showEmpty("Nenhum filme encontrado.");
-    resetPag(url, "movie", total_pages);
 
   } else if (aba === "series") {
-    const url = `${BASE}/tv/popular?api_key=${API_KEY}&language=pt-BR`;
-    const { results, total_pages } = await fetchDataPaginado(url, 1);
-    content.innerHTML = ""; const sec = renderSecao(null, results, "tv");
+    const data = await fetchData(`${BASE}/tv/popular?api_key=${API_KEY}&language=pt-BR`);
+    content.innerHTML = ""; const sec = renderSecao(null, data, "tv");
     sec ? content.appendChild(sec) : showEmpty("Nenhuma série encontrada.");
-    resetPag(url, "tv", total_pages);
 
   } else if (aba === "documentarios") {
-    const url = `${BASE}/discover/movie?api_key=${API_KEY}&with_genres=99&language=pt-BR`;
-    const { results, total_pages } = await fetchDataPaginado(url, 1);
-    content.innerHTML = ""; const sec = renderSecao(null, results, "movie");
+    const data = await fetchData(`${BASE}/discover/movie?api_key=${API_KEY}&with_genres=99&language=pt-BR`);
+    content.innerHTML = ""; const sec = renderSecao(null, data, "movie");
     sec ? content.appendChild(sec) : showEmpty("Nenhum documentário encontrado.");
-    resetPag(url, "movie", total_pages);
 
   } else if (aba === "animes") {
     const [movies, series] = await Promise.all([
@@ -588,11 +532,9 @@ async function mudarAba(aba) {
     if (secM) content.appendChild(secM);
     if (secS) content.appendChild(secS);
     if (!secM && !secS) showEmpty("Nenhum anime encontrado.");
-    resetPag(null, null, 1, false);
 
   } else if (aba === "favoritos") {
     content.innerHTML = "";
-    resetPag(null, null, 1, false);
     if (!favorites.length) { showEmpty("Você ainda não tem favoritos ❤️<br><small style='color:#555;font-size:0.8rem;'>Passe o mouse sobre um título e clique no ♥</small>"); return; }
     const secM = renderSecao("Filmes Favoritos", favorites.filter(f => f._tipo === "movie"), "movie");
     const secS = renderSecao("Séries Favoritas", favorites.filter(f => f._tipo === "tv"),    "tv");
@@ -614,7 +556,6 @@ searchInput.addEventListener("input", () => {
     if (abaAtual === "favoritos") {
       const filtrados = favorites.filter(f => (f.title || f.name || "").toLowerCase().includes(query.toLowerCase()));
       content.innerHTML = "";
-      resetPag(null, null, 1, false);
       if (!filtrados.length) { showEmpty(); return; }
       const secM = renderSecao("Filmes", filtrados.filter(f => f._tipo === "movie"), "movie");
       const secS = renderSecao("Séries", filtrados.filter(f => f._tipo === "tv"), "tv");
@@ -622,18 +563,14 @@ searchInput.addEventListener("input", () => {
       if (secS) content.appendChild(secS);
 
     } else if (abaAtual === "filmes" || abaAtual === "documentarios") {
-      const url = `${BASE}/search/movie?api_key=${API_KEY}&query=${q}&language=pt-BR`;
-      const { results, total_pages } = await fetchDataPaginado(url, 1);
-      content.innerHTML = ""; const sec = renderSecao(null, results, "movie");
+      const data = await fetchData(`${BASE}/search/movie?api_key=${API_KEY}&query=${q}&language=pt-BR`);
+      content.innerHTML = ""; const sec = renderSecao(null, data, "movie");
       sec ? content.appendChild(sec) : showEmpty();
-      resetPag(url, "movie", total_pages);
 
     } else if (abaAtual === "series") {
-      const url = `${BASE}/search/tv?api_key=${API_KEY}&query=${q}&language=pt-BR`;
-      const { results, total_pages } = await fetchDataPaginado(url, 1);
-      content.innerHTML = ""; const sec = renderSecao(null, results, "tv");
+      const data = await fetchData(`${BASE}/search/tv?api_key=${API_KEY}&query=${q}&language=pt-BR`);
+      content.innerHTML = ""; const sec = renderSecao(null, data, "tv");
       sec ? content.appendChild(sec) : showEmpty();
-      resetPag(url, "tv", total_pages);
 
     } else if (abaAtual === "animes") {
       const [movies, series] = await Promise.all([
@@ -641,7 +578,6 @@ searchInput.addEventListener("input", () => {
         fetchData(`${BASE}/search/tv?api_key=${API_KEY}&query=${q}&language=pt-BR`)
       ]);
       content.innerHTML = "";
-      resetPag(null, null, 1, false);
       const secM = renderSecao("Filmes", movies, "movie");
       const secS = renderSecao("Séries", series, "tv");
       if (secM) content.appendChild(secM);
