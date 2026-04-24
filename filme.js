@@ -1,7 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// CONFIGURAÇÃO
-// Depois que o Railway te der a URL do backend, troque aqui:
-// ─────────────────────────────────────────────────────────────────────────────
+
 const BACKEND = "https://backend-cat-logo-production.up.railway.app";
 const API_URL = "https://backend-cat-logo-production.up.railway.app";
 const API_KEY = "8bcf3516840c71be090ce067d3464a1d";
@@ -535,6 +532,16 @@ async function mudarAba(aba) {
       fetchData(`${BASE}/discover/tv?api_key=${API_KEY}&with_genres=16&language=pt-BR`)
     ]);
     content.innerHTML = "";
+
+    if (favorites.length) {
+    const recomendados = await buscarRecomendados();
+
+    if (recomendados.length) {
+      const secRec = renderSecao("Recomendado para você", recomendados, "movie");
+      if (secRec) content.appendChild(secRec);
+    }
+  }
+  
     const secM = renderSecao("Filmes Animados", movies, "movie");
     const secS = renderSecao("Séries Animadas", series, "tv");
     if (secM) content.appendChild(secM);
@@ -607,3 +614,38 @@ const abasValidas = ['filmes', 'series', 'documentarios', 'animes', 'favoritos']
 mudarAba(abasValidas.includes(abaHash) ? abaHash : 'filmes');
 
 lucide.createIcons();
+
+async function buscarRecomendados() {
+  if (!favorites.length) return [];
+
+  // pega IDs dos filmes favoritos
+  const ids = favorites.map(f => f.id).slice(0, 3); // limita pra não pesar
+
+  const resultados = [];
+
+  for (let id of ids) {
+    const tipo = favorites.find(f => f.id === id)?._tipo || "movie";
+
+    try {
+      const res = await fetch(`${BASE}/${tipo}/${id}/recommendations?api_key=${API_KEY}&language=pt-BR`);
+      const data = await res.json();
+
+      if (data.results) {
+        resultados.push(...data.results);
+      }
+    } catch (e) {}
+  }
+
+  // remove duplicados
+  const unicos = [];
+  const idsSet = new Set();
+
+  for (let item of resultados) {
+    if (!idsSet.has(item.id)) {
+      idsSet.add(item.id);
+      unicos.push(item);
+    }
+  }
+
+  return unicos.slice(0, 20);
+}
