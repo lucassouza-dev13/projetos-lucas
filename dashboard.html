@@ -173,17 +173,17 @@
 <nav>
   <a class="logo" href="#"><span>LusTV</span>Ratings</a>
   <div class="nav-links">
-    <a href="#">Filmes</a>
-    <a href="#">Séries</a>
-    <a href="#">Docs</a>
-    <a href="#">Animações</a>
-    <a href="#">Favoritos</a>
+    <a href="index.html#filmes">Filmes</a>
+    <a href="index.html#series">Séries</a>
+    <a href="index.html#documentarios">Docs</a>
+    <a href="index.html#animes">Animações</a>
+    <a href="index.html#favoritos">Favoritos</a>
     <a href="#" class="active">Dashboard</a>
   </div>
   <div class="nav-right">
     <div class="avatar-nav" id="nav-avatar">?</div>
     <span class="username-nav" id="nav-nome">Carregando...</span>
-    <button class="sair-btn">Sair</button>
+    <button class="sair-btn" onclick="fazerLogout()">Sair</button>
   </div>
 </nav>
 
@@ -265,13 +265,13 @@
 const API = 'https://backend-cat-logo-production.up.railway.app';
 const AVATARES = ['🦊','🐻','🎭','🎬','🦁','🐼','🦸','🌟','🎮','🐯','🦋','🐉','🎸','🚀','🌙','👾','🦅','🐺','🎪','🔥','💎','🌊','🎯','🏆'];
 
-let token = localStorage.getItem('token');
-let usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+let token = localStorage.getItem('lustv_token');
+let usuario = JSON.parse(localStorage.getItem('lustv_usuario') || 'null');
 let avatarSelecionado = null;
 let generoSelecionado = null;
 
 // Utilitários
-function getToken() { return localStorage.getItem('token'); }
+function getToken() { return localStorage.getItem('lustv_token'); }
 function rankClass(i) { return i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : ''; }
 function badgeHtml(i) {
   if (i === 0) return '<span class="badge badge-hot">Quente</span>';
@@ -286,7 +286,7 @@ function delay(i) { return `animation-delay:${i * 0.06}s`; }
 
 // Nav
 function atualizarNav() {
-  const u = JSON.parse(localStorage.getItem('usuario') || 'null');
+  const u = JSON.parse(localStorage.getItem('lustv_usuario') || 'null');
   if (!u) return;
   document.getElementById('nav-nome').textContent = u.nome;
   const av = u.avatar || u.nome[0].toUpperCase();
@@ -428,43 +428,15 @@ async function carregarPerfil() {
     if (!recentes || recentes.length === 0) {
       listEl.innerHTML = '<div class="empty">Nenhuma avaliação ainda.</div>';
     } else {
-      // Busca detalhes do TMDB para cada avaliação (tenta filme, depois série)
-      const TMDB_KEY = '8bcf3516840c71be090ce067d3464a1d';
-      const IMG_BASE = 'https://image.tmdb.org/t/p/w92';
-      const TMDB    = 'https://api.themoviedb.org/3';
-
-      async function buscarDetalhes(filmeId) {
-        try {
-          const r = await fetch(`${TMDB}/movie/${filmeId}?api_key=${TMDB_KEY}&language=pt-BR`);
-          const d = await r.json();
-          if (d.title) return { titulo: d.title, poster: d.poster_path ? IMG_BASE + d.poster_path : null };
-        } catch(e) {}
-        try {
-          const r = await fetch(`${TMDB}/tv/${filmeId}?api_key=${TMDB_KEY}&language=pt-BR`);
-          const d = await r.json();
-          if (d.name) return { titulo: d.name, poster: d.poster_path ? IMG_BASE + d.poster_path : null };
-        } catch(e) {}
-        return { titulo: null, poster: null };
-      }
-
-      const detalhes = await Promise.all(recentes.map(av => buscarDetalhes(av.filme_id)));
-
-      listEl.innerHTML = recentes.map((av, i) => {
-        const det = detalhes[i];
-        const titulo = det.titulo || 'Título desconhecido';
-        const posterHtmlRecente = det.poster
-          ? `<div class="poster"><img src="${det.poster}" alt="${titulo}"/></div>`
-          : `<div class="poster" style="font-size:20px;color:#555">?</div>`;
-        return `
+      listEl.innerHTML = recentes.map((av, i) => `
         <div class="movie-row" style="${delay(i)}">
-          ${posterHtmlRecente}
+          <div class="poster">🎬</div>
           <div class="movie-info">
-            <div class="movie-title">${titulo}</div>
+            <div class="movie-title">Filme #${av.filme_id}</div>
             <div class="movie-meta">${'★'.repeat(av.estrelas)}${'☆'.repeat(5 - av.estrelas)} • ${new Date(av.criado_em).toLocaleDateString('pt-BR')}</div>
             ${av.comentario ? `<div class="movie-meta" style="margin-top:4px;font-style:italic">"${av.comentario}"</div>` : ''}
           </div>
-        </div>`;
-      }).join('');
+        </div>`).join('');
     }
   } catch(e) {
     document.getElementById('list-recentes').innerHTML = '<div class="empty">Erro ao carregar perfil. Faça login novamente.</div>';
@@ -493,9 +465,9 @@ async function salvarAvatar() {
     });
     const data = await r.json();
     if (data.usuario) {
-      const u = JSON.parse(localStorage.getItem('usuario') || '{}');
+      const u = JSON.parse(localStorage.getItem('lustv_usuario') || '{}');
       u.avatar = avatarSelecionado;
-      localStorage.setItem('usuario', JSON.stringify(u));
+      localStorage.setItem('lustv_usuario', JSON.stringify(u));
       atualizarNav();
       fecharModal();
       carregarPerfil();
@@ -512,13 +484,20 @@ function editarNome() {
     body: JSON.stringify({ nome: novo.trim() })
   }).then(r => r.json()).then(data => {
     if (data.usuario) {
-      const u = JSON.parse(localStorage.getItem('usuario') || '{}');
+      const u = JSON.parse(localStorage.getItem('lustv_usuario') || '{}');
       u.nome = data.usuario.nome;
-      localStorage.setItem('usuario', JSON.stringify(u));
+      localStorage.setItem('lustv_usuario', JSON.stringify(u));
       atualizarNav();
       carregarPerfil();
     } else { alert(data.erro || 'Erro ao atualizar nome.'); }
   });
+}
+
+// LOGOUT
+function fazerLogout() {
+  localStorage.removeItem('lustv_token');
+  localStorage.removeItem('lustv_usuario');
+  window.location.href = 'index.html';
 }
 
 // INIT
