@@ -171,7 +171,7 @@
 <body>
 
 <nav>
-  <a class="logo" href="#"><span>LusTV</span>-Ratings 🍿</a>
+  <a class="logo" href="#"><span>LusTV</span>Ratings</a>
   <div class="nav-links">
     <a href="https://lucassouza-dev13.github.io/catalogo-filmes/#filmes">Filmes</a>
     <a href="https://lucassouza-dev13.github.io/catalogo-filmes/#series">Séries</a>
@@ -428,15 +428,43 @@ async function carregarPerfil() {
     if (!recentes || recentes.length === 0) {
       listEl.innerHTML = '<div class="empty">Nenhuma avaliação ainda.</div>';
     } else {
-      listEl.innerHTML = recentes.map((av, i) => `
-        <div class="movie-row" style="${delay(i)}">
-          <div class="poster">🎬</div>
-          <div class="movie-info">
-            <div class="movie-title">Filme #${av.filme_id}</div>
-            <div class="movie-meta">${'★'.repeat(av.estrelas)}${'☆'.repeat(5 - av.estrelas)} • ${new Date(av.criado_em).toLocaleDateString('pt-BR')}</div>
-            ${av.comentario ? `<div class="movie-meta" style="margin-top:4px;font-style:italic">"${av.comentario}"</div>` : ''}
-          </div>
-        </div>`).join('');
+      // Busca poster e título no TMDB para cada avaliação
+      const TMDB_KEY = '8bcf3516840c71be090ce067d3464a1d';
+      const IMG_BASE = 'https://image.tmdb.org/t/p/w92';
+      const TMDB_URL = 'https://api.themoviedb.org/3';
+
+      const detalhes = await Promise.all(recentes.map(async (av) => {
+        try {
+          const rm = await fetch(TMDB_URL + '/movie/' + av.filme_id + '?api_key=' + TMDB_KEY + '&language=pt-BR');
+          const dm = await rm.json();
+          if (dm.title) return { titulo: dm.title, poster: dm.poster_path ? IMG_BASE + dm.poster_path : null };
+        } catch(e) {}
+        try {
+          const rt = await fetch(TMDB_URL + '/tv/' + av.filme_id + '?api_key=' + TMDB_KEY + '&language=pt-BR');
+          const dt = await rt.json();
+          if (dt.name) return { titulo: dt.name, poster: dt.poster_path ? IMG_BASE + dt.poster_path : null };
+        } catch(e) {}
+        return { titulo: null, poster: null };
+      }));
+
+      listEl.innerHTML = recentes.map((av, i) => {
+        const det = detalhes[i];
+        const titulo = det.titulo || ('Filme #' + av.filme_id);
+        const posterEl = det.poster
+          ? '<div class="poster"><img src="' + det.poster + '" alt="' + titulo + '" style="width:100%;height:100%;object-fit:cover;border-radius:4px"/></div>'
+          : '<div class="poster" style="color:#555;font-size:18px">?</div>';
+        const estrelas = '★'.repeat(av.estrelas) + '☆'.repeat(5 - av.estrelas);
+        const data = new Date(av.criado_em).toLocaleDateString('pt-BR');
+        const comentario = av.comentario ? '<div class="movie-meta" style="margin-top:4px;font-style:italic">"' + av.comentario + '"</div>' : '';
+        return '<div class="movie-row" style="' + delay(i) + '">' +
+          posterEl +
+          '<div class="movie-info">' +
+            '<div class="movie-title">' + titulo + '</div>' +
+            '<div class="movie-meta">' + estrelas + ' • ' + data + '</div>' +
+            comentario +
+          '</div>' +
+        '</div>';
+      }).join('');
     }
   } catch(e) {
     document.getElementById('list-recentes').innerHTML = '<div class="empty">Erro ao carregar perfil. Faça login novamente.</div>';
