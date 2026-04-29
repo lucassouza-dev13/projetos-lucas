@@ -264,7 +264,7 @@ async function avRemover(filmeId, avId) {
   }
 }
 
-function inicializarFormAvaliacao(filmeId) {
+async function inicializarFormAvaliacao(filmeId) {
   avEstrelaAtual = 0;
 
   const btns     = document.querySelectorAll("#av-estrelas button");
@@ -298,36 +298,56 @@ function inicializarFormAvaliacao(filmeId) {
     btn.addEventListener("click", () => {
       avEstrelaAtual = +btn.dataset.v;
       atualizarEstrelas(avEstrelaAtual);
-      hint.textContent  = AV_LABELS[avEstrelaAtual - 1];
-      btnNovo.disabled  = false;
+      hint.textContent = AV_LABELS[avEstrelaAtual - 1];
+      btnNovo.disabled = false;
     });
     btn.addEventListener("mouseenter", () => atualizarEstrelas(+btn.dataset.v));
     btn.addEventListener("mouseleave", () => atualizarEstrelas(avEstrelaAtual));
   });
 
+  // Verifica se usuário já avaliou e pré-preenche o formulário
+  let modoEdicao = false;
+  if (usuario) {
+    try {
+      const minhaData = await api("GET", `/avaliacoes/${filmeId}/minha`);
+      if (minhaData.avaliacao) {
+        modoEdicao = true;
+        avEstrelaAtual = minhaData.avaliacao.estrelas;
+        atualizarEstrelas(avEstrelaAtual);
+        hint.textContent = AV_LABELS[avEstrelaAtual - 1];
+        if (avComent) avComent.value = minhaData.avaliacao.comentario || "";
+        btnNovo.disabled = false;
+        btnNovo.textContent = "Atualizar avaliação";
+      }
+    } catch(e) {}
+  }
+
   btnNovo.addEventListener("click", async () => {
     if (!usuario || !avEstrelaAtual) return;
     btnNovo.disabled    = true;
-    btnNovo.textContent = "Enviando...";
+    btnNovo.textContent = modoEdicao ? "Atualizando..." : "Enviando...";
 
     try {
-      await api("POST", `/avaliacoes/${filmeId}`, {
-        estrelas:   avEstrelaAtual,
-        comentario: avComent ? avComent.value.trim() : ""
-      });
+      if (modoEdicao) {
+        await api("PUT", `/avaliacoes/${filmeId}`, {
+          estrelas:   avEstrelaAtual,
+          comentario: avComent ? avComent.value.trim() : ""
+        });
+      } else {
+        await api("POST", `/avaliacoes/${filmeId}`, {
+          estrelas:   avEstrelaAtual,
+          comentario: avComent ? avComent.value.trim() : ""
+        });
+        modoEdicao = true;
+      }
 
       renderAvaliacoes(filmeId);
-
-      // Reset form
-      avEstrelaAtual = 0;
-      atualizarEstrelas(0);
-      hint.textContent    = "Selecione uma nota";
-      if (avComent) avComent.value = "";
+      hint.textContent    = AV_LABELS[avEstrelaAtual - 1];
+      btnNovo.textContent = "Atualizar avaliação";
     } catch(e) {
       hint.textContent = e.message;
     } finally {
-      btnNovo.disabled    = false;
-      btnNovo.textContent = "Enviar avaliação";
+      btnNovo.disabled = false;
     }
   });
 }
@@ -548,10 +568,18 @@ searchInput.addEventListener("input", () => {
       const secS = renderSecao("Séries", filtrados.filter(f => f._tipo === "tv"), "tv");
       if (secM) content.appendChild(secM);
       if (secS) content.appendChild(secS);
-      lucide.createIcons();
 
-    } else {
-      // Busca global: filmes + séries em paralelo, independente da aba
+    } else if (abaAtual === "filmes" || abaAtual === "documentarios") {
+      const data = await fetchData(`${BASE}/search/movie?api_key=${API_KEY}&query=${q}&language=pt-BR`);
+      content.innerHTML = ""; const sec = renderSecao(null, data, "movie");
+      sec ? content.appendChild(sec) : showEmpty();
+
+    } else if (abaAtual === "series") {
+      const data = await fetchData(`${BASE}/search/tv?api_key=${API_KEY}&query=${q}&language=pt-BR`);
+      content.innerHTML = ""; const sec = renderSecao(null, data, "tv");
+      sec ? content.appendChild(sec) : showEmpty();
+
+    } else if (abaAtual === "animes") {
       const [movies, series] = await Promise.all([
         fetchData(`${BASE}/search/movie?api_key=${API_KEY}&query=${q}&language=pt-BR`),
         fetchData(`${BASE}/search/tv?api_key=${API_KEY}&query=${q}&language=pt-BR`)
@@ -562,7 +590,6 @@ searchInput.addEventListener("input", () => {
       if (secM) content.appendChild(secM);
       if (secS) content.appendChild(secS);
       if (!secM && !secS) showEmpty();
-      lucide.createIcons();
     }
   }, 400);
 });
